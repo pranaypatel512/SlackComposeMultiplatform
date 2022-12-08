@@ -73,9 +73,11 @@ object Deps {
 
 object Lib {
     object Project {
-        const val SLACK_DOMAIN_COMMON = "dev.baseio.slackclone:slack_domain_layer:1.0"
-        const val SLACK_DATA_COMMON = "dev.baseio.slackclone:slack_data_layer:1.0"
-        const val CAPILLARY_KMP = "dev.baseio.slackcrypto:capillary-kmp:1.0"
+        const val SLACK_DOMAIN_COMMON = ":slack_domain_layer"
+        const val SLACK_DATA_COMMON = ":slack_data_layer"
+        const val CAPILLARY_KMP = ":encryptionlib"
+
+
         const val common = ":common"
         const val commonComposeUI = ":commoncomposeui"
     }
@@ -172,6 +174,9 @@ object Lib {
         private const val RETROFIT_VERSION = "2.9.0"
         const val OKHTTP_VERSION = "4.7.2"
         const val ktor_version = "2.1.0"
+        const val ktor_core = ("io.ktor:ktor-client-core:$ktor_version")
+        const val ktor_cio = ("io.ktor:ktor-client-cio:$ktor_version")
+        const val KTOR_JVM = "io.ktor:ktor-client-java:$ktor_version"
         val KTOR_DARWIN = "io.ktor:ktor-client-darwin:$ktor_version"
         const val RETROFIT = "com.squareup.retrofit2:retrofit:$RETROFIT_VERSION"
         const val RETROFIT_GSON = "com.squareup.retrofit2:converter-gson:$RETROFIT_VERSION"

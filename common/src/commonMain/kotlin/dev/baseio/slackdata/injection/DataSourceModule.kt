@@ -54,7 +54,7 @@ val dataSourceModule = module {
     single<IGrpcCalls> {
         GrpcCalls(skKeyValueData = get(), address = "192.168.1.14")
     }
-    single<SKNetworkSaveFcmToken> { SKNetworkSaveFcmTokenImpl(get(),get()) }
+    single<SKNetworkSaveFcmToken> { SKNetworkSaveFcmTokenImpl(get(), get()) }
     single<SKLocalDatabaseSource> {
         SKLocalDatabaseSourceImpl(get())
     }
@@ -65,7 +65,7 @@ val dataSourceModule = module {
         SKNetworkSourceChannelImpl(get(), get(), get(), get(), get())
     }
     single<SKNetworkSourceWorkspaces> {
-        SKNetworkSourceWorkspacesImpl(get())
+        SKNetworkSourceWorkspacesImpl(get(), get())
     }
     single<SKAuthNetworkDataSource> {
         SKAuthNetworkDataSourceImpl(get())
@@ -93,7 +93,7 @@ val dataSourceModule = module {
         SKLocalDataSourceWriteWorkspacesImpl(get(), get())
     }
     single<SKLocalDataSourceReadWorkspaces> {
-        SKLocalDataSourceReadWorkspacesImpl(get(), get(SlackWorkspaceMapperQualifier), get())
+        SKLocalDataSourceReadWorkspacesImpl(get(), get(), get(SlackWorkspaceMapperQualifier), get())
     }
     single<SKNetworkDataSourceWriteChannels> {
         SKNetworkDataSourceWriteChannelsImpl(get(), get())
@@ -117,7 +117,13 @@ val dataSourceModule = module {
             get(), get(), get()
         )
     }
-    single<SKLocalDataSourceUsers> { SKLocalDataSourceUsersImpl(get(), get(SlackUserRandomUserQualifier)) }
+    single<SKLocalDataSourceUsers> {
+        SKLocalDataSourceUsersImpl(
+            get(),
+            get(),
+            get(SlackUserRandomUserQualifier),
+        )
+    }
     single<SKLocalDataSourceMessages> {
         SKLocalDataSourceMessagesImpl(
             get(),

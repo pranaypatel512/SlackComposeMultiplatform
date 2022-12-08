@@ -27,9 +27,11 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.example.android.R
 
-class MainActivity : AppCompatActivity() {
+class SlackAndroidActivity : AppCompatActivity() {
 
-    fun Intent.channelId() = this.extras?.getString(MainActivity.EXTRA_CHANNEL_ID)
+    fun Intent.channelId() = this.extras?.getString(SlackAndroidActivity.EXTRA_CHANNEL_ID)
+
+    fun Intent.workspaceId() = this.extras?.getString(SlackAndroidActivity.EXTRA_WORKSPACE_ID)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,7 +50,20 @@ class MainActivity : AppCompatActivity() {
                 root
             }
             LaunchedEffect(intent?.channelId()) {
-                intent?.channelId()?.let { root.navigateChannel(it) }
+                with(intent) {
+                    channelId()?.let {
+                        root.navigateChannel(channelId()!!, workspaceId()!!)
+                    }
+                }
+            }
+            LaunchedEffect(intent?.action) {
+                intent?.action?.let {
+                    if (it == Intent.ACTION_VIEW) {
+                        intent.data?.getQueryParameter("token")?.takeIf { token -> token.isNotEmpty() }?.let {
+                            root.navigateAuthorizeWithToken(it)
+                        }
+                    }
+                }
             }
             askForPostNotificationPermission()
         }
@@ -78,13 +93,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        fun channelChatIntent(channelId: String, context: Context): Intent {
-            return Intent(context, MainActivity::class.java).apply {
+        fun channelChatIntent(channelId: String, workspaceId: String, context: Context): Intent {
+            return Intent(context, SlackAndroidActivity::class.java).apply {
                 putExtra(EXTRA_CHANNEL_ID, channelId)
+                putExtra(EXTRA_WORKSPACE_ID, workspaceId)
             }
         }
 
         const val EXTRA_CHANNEL_ID: String = "channel_id"
+        const val EXTRA_WORKSPACE_ID = "workspaceId"
         const val INTENT_KEY_NOT_ID: String = "notification_id"
     }
 }

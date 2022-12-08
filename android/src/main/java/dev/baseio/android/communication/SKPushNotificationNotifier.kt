@@ -16,7 +16,7 @@ import androidx.core.app.NotificationCompat.Builder
 import androidx.core.app.NotificationCompat.InboxStyle
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
-import dev.baseio.android.MainActivity
+import dev.baseio.android.SlackAndroidActivity
 import dev.baseio.slackdomain.datasources.local.messages.IMessageDecrypter
 import dev.baseio.slackdomain.model.channel.DomainLayerChannels
 import dev.baseio.slackdomain.model.message.DomainLayerMessages
@@ -44,8 +44,12 @@ class SKPushNotificationNotifier(
         }
     }
 
-    suspend fun createReplyNotification(skMessage: DomainLayerMessages.SKMessage, channel: DomainLayerChannels.SKChannel) {
-        val channelMessagesMap = HashMap<DomainLayerChannels.SKChannel, ArrayList<DomainLayerMessages.SKMessage>>()
+    suspend fun createReplyNotification(
+        skMessage: DomainLayerMessages.SKMessage,
+        channel: DomainLayerChannels.SKChannel
+    ) {
+        val channelMessagesMap =
+            HashMap<DomainLayerChannels.SKChannel, ArrayList<DomainLayerMessages.SKMessage>>()
         addToChannelMessageMap(channel, skMessage, channelMessagesMap)
         processChannelMessageMapForGroupNotification(channelMessagesMap)
     }
@@ -114,7 +118,7 @@ class SKPushNotificationNotifier(
             .setSmallIcon(R.drawable.ic_baseline_notifications_24)
             // build summary info into InboxStyle template
             .setStyle(
-                inboxStyleFromMessages(messages,channel)
+                inboxStyleFromMessages(messages, channel)
             )
             // specify which group this notification belongs to
             .setGroup(channel.channelId)
@@ -178,7 +182,7 @@ class SKPushNotificationNotifier(
     // TODO - Try to find a way to have consistent ids instead of the current generator based ids
     private fun getChannelActivityIntent(skMessage: DomainLayerMessages.SKMessage): PendingIntent? {
         val resultIntent =
-            MainActivity.channelChatIntent(skMessage.channelId, context)
+            SlackAndroidActivity.channelChatIntent(skMessage.channelId, skMessage.workspaceId, context)
         return PendingIntent.getActivity(
             context,
             skMessage.uuid.hashCode(),
@@ -192,9 +196,9 @@ class SKPushNotificationNotifier(
         notificationId: Int
     ): PendingIntent? {
         val resultIntent = Intent(context, SKReplyGroupMessageReceiver::class.java)
-        resultIntent.putExtra(MainActivity.INTENT_KEY_NOT_ID, notificationId)
+        resultIntent.putExtra(SlackAndroidActivity.INTENT_KEY_NOT_ID, notificationId)
         resultIntent.putExtra(
-            MainActivity.EXTRA_CHANNEL_ID, skMessage.channelId
+            SlackAndroidActivity.EXTRA_CHANNEL_ID, skMessage.channelId
         )
         return PendingIntent.getBroadcast(
             context,
@@ -215,7 +219,9 @@ class SKPushNotificationNotifier(
             .setLabel(replyLabel)
             .build()
         val replyAction: Action = Action.Builder(
-            android.R.drawable.sym_action_chat, context.getString(R.string.notif_reply), resultPendingIntent
+            android.R.drawable.sym_action_chat,
+            context.getString(R.string.notif_reply),
+            resultPendingIntent
         )
             .addRemoteInput(remoteInput)
             .setAllowGeneratedReplies(true)
@@ -246,7 +252,11 @@ class SKPushNotificationNotifier(
     ) {
         notificationManager.cancel(notificationId)
         notificationManager.cancel(channelNotificationId)
-        Toast.makeText(context, context.getString(R.string.notification_message_sent), Toast.LENGTH_LONG)
+        Toast.makeText(
+            context,
+            context.getString(R.string.notification_message_sent),
+            Toast.LENGTH_LONG
+        )
             .show()
     }
 

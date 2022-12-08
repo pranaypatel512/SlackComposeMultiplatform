@@ -9,6 +9,7 @@ import dev.baseio.slackclone.Platform
 import dev.baseio.slackclone.data.injection.viewModelDelegateModule
 import dev.baseio.slackclone.Platform.ANDROID
 import dev.baseio.slackclone.platformType
+import dev.baseio.slackdata.common.kmEmpty
 import dev.baseio.slackdata.datasources.remote.channels.toKMSlackPublicKey
 import dev.baseio.slackdata.injection.*
 import dev.baseio.slackdata.localdata.testDbConnection
@@ -23,7 +24,7 @@ import dev.baseio.slackdomain.usecases.channels.UseCaseFetchAndSaveChannels
 import dev.baseio.slackdomain.usecases.channels.UseCaseWorkspaceChannelRequest
 import dev.baseio.slackdomain.usecases.users.UseCaseFetchAndSaveUsers
 import dev.baseio.slackdomain.usecases.users.UseCaseFetchChannelsWithSearch
-import dev.baseio.slackdomain.usecases.workspaces.UseCaseCreateWorkspace
+import dev.baseio.slackdomain.usecases.workspaces.UseCaseAuthWorkspace
 import dev.baseio.slackdomain.usecases.workspaces.UseCaseFetchAndSaveWorkspaces
 import dev.baseio.slackdomain.usecases.workspaces.UseCaseGetSelectedWorkspace
 import kotlinx.coroutines.Dispatchers
@@ -46,15 +47,16 @@ import kotlin.test.BeforeTest
 abstract class SlackKoinUnitTest : KoinTest {
     protected val mocker = Mocker()
     lateinit var koinApplication: KoinApplication
+
     protected lateinit var selectedWorkspace: DomainLayerWorkspaces.SKWorkspace
     protected val coroutineDispatcherProvider: CoroutineDispatcherProvider by inject()
-    protected val useCaseCreateWorkspace: UseCaseCreateWorkspace by inject()
+    protected val useCaseAuthWorkspace: UseCaseAuthWorkspace by inject()
     protected val useCaseCreateChannel: UseCaseCreateChannel by inject()
     protected val useCaseFetchChannelsWithSearch: UseCaseFetchChannelsWithSearch by inject()
     protected val useCaseGetSelectedWorkspace: UseCaseGetSelectedWorkspace by inject()
-    protected val getWorkspaces: UseCaseFetchAndSaveWorkspaces by inject()
-    protected val getChannels: UseCaseFetchAndSaveChannels by inject()
-    val skLocalDataSourceChannels: SKLocalDataSourceReadChannels by inject()
+    private val getWorkspaces: UseCaseFetchAndSaveWorkspaces by inject()
+    private val getChannels: UseCaseFetchAndSaveChannels by inject()
+    private val skLocalDataSourceChannels: SKLocalDataSourceReadChannels by inject()
     protected val useCaseFetchAndSaveChannelMembers: UseCaseFetchAndSaveChannelMembers by inject()
     protected val getUsers: UseCaseFetchAndSaveUsers by inject()
 
@@ -64,7 +66,7 @@ abstract class SlackKoinUnitTest : KoinTest {
         platformMess()
     }
 
-    fun initKoinApp() {
+    private fun initKoinApp() {
         koinApplication = startKoin {
             modules(
                 module {
@@ -85,7 +87,7 @@ abstract class SlackKoinUnitTest : KoinTest {
     suspend fun authorizeUserFirst() {
         mocker.every { iGrpcCalls().skKeyValueData } returns koinApplication.koin.get()
         mocker.everySuspending { iGrpcCalls().currentLoggedInUser(isAny()) } returns testUser()
-        mocker.everySuspending { iGrpcCalls().saveWorkspace(isAny(), isAny()) } returns kmskAuthResult()
+        mocker.everySuspending { iGrpcCalls().sendMagicLink(isAny(), isAny()) } returns kmEmpty {  }
         mocker.everySuspending { iGrpcCalls().getWorkspaces(isAny()) } returns testWorkspaces()
         mocker.everySuspending {
             iGrpcCalls().getAllDMChannels(
@@ -104,8 +106,8 @@ abstract class SlackKoinUnitTest : KoinTest {
             )
         } returns testPublicChannels("1")
 
-        useCaseCreateWorkspace.invoke(testUser().email,"12345","slack.com")
-        getWorkspaces.invoke()
+        useCaseAuthWorkspace.invoke(testUser().email,"slack.com")
+        getWorkspaces.invoke("some token")
         selectedWorkspace = useCaseGetSelectedWorkspace.invoke()!!
         getChannels.invoke(selectedWorkspace.uuid, 0, 20)
         val channels = skLocalDataSourceChannels.fetchAllChannels(selectedWorkspace.uuid).first()

@@ -43,7 +43,8 @@ class DashboardComponent(
     componentContext: ComponentContext,
     val navigateOnboarding: () -> Unit,
     val navigateQrScanner:(QrScannerMode)->Unit,
-    val navigateRoot: (RootComponent.Config) -> Unit
+    val navigateRoot: (RootComponent.Config) -> Unit,
+    val navigateAddWorkspace:()->Unit
 ) : Dashboard, ComponentContext by componentContext {
 
     val sideNavComponent = SideNavComponent(childContext(SideNavComponent::class.qualifiedName.toString())) {
@@ -65,7 +66,6 @@ class DashboardComponent(
 
     val dashboardVM = instanceKeeper.getOrCreate {
         DashboardVM(
-            getKoin().get(),
             getKoin().get(),
             getKoin().get(),
             getKoin().get(),

@@ -12,26 +12,27 @@ import kotlin.coroutines.CoroutineContext
 
 class GettingStartedComponent(
   componentContext: ComponentContext,
-  val onCreateWorkspaceRequested: (Boolean) -> Unit,
+  val firstRun:Boolean,
   val navigateBack: () -> Unit,
   private val navigateDashboard: () -> Unit,
+  val emailMagicLink: () -> Unit
 ) : ComponentContext by componentContext {
 
   val viewModel =
     instanceKeeper.getOrCreate {
       GettingStartedVM(
-        getKoin().get(),
+        coroutineDispatcherProvider = getKoin().get(),
         navigateDashboard = navigateDashboard,
         navigateBackNow = {
           navigateBack.invoke()
         },
-        getKoin().get(),
+        qrCodeDelegate = getKoin().get(),
       )
     }
 
   data class GettingStartedState(
     val introTextExpanded: Boolean,
-    val isStartAnimation: Boolean,
+    val isAnimationStarting: Boolean,
     val showSlackAnim: Boolean
   )
 }
